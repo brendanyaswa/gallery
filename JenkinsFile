@@ -1,5 +1,12 @@
 pipeline {
     agent any
+    environment {
+         
+
+        SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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'
+
+        RENDER_URL = 'https://gallery-zjf5.onrender.com'
+    }
 
 
     stages {
@@ -22,16 +29,22 @@ pipeline {
                 sh 'npm test'
             }
         }
+        stage('Deploy to Render') {
+            steps {
+                sh 'node server.js'
+            }
+        }
 
        
     }
 
     post {
         success {
-            echo 'Build successful!'
-        }
-        failure {
-            echo 'Build failed!'
+            sh """
+            curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"Build #$BUILD_ID deployed successfully! Visit: $RENDER_URL"}' \
+            $SLACK_WEBHOOK_URL
+            """
         }
     }
 }
